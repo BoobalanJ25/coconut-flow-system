@@ -150,11 +150,15 @@ export default function TreeOwners() {
     }
   };
 
-  const filteredOwners = owners?.filter((owner) =>
-    owner.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    owner.phone.includes(searchQuery) ||
-    owner.location.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredOwners = owners?.filter((owner) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      owner.name.toLowerCase().includes(query) ||
+      owner.phone.toLowerCase().includes(query) ||
+      owner.location.toLowerCase().includes(query) ||
+      (owner.notes && owner.notes.toLowerCase().includes(query))
+    );
+  });
 
   if (owners === undefined) {
     return (
