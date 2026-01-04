@@ -14,7 +14,7 @@ import {
   User,
   CalendarCheck,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -27,6 +27,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
   isMobile?: boolean;
@@ -98,6 +100,13 @@ export default function DashboardLayout() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const initializeUser = useMutation(api.users.initializeUser);
+
+  useEffect(() => {
+    if (user && !user.role) {
+      initializeUser();
+    }
+  }, [user, initializeUser]);
 
   const handleSignOut = async () => {
     await signOut();

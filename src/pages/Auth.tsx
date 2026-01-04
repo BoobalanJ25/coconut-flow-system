@@ -10,7 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
-import { ArrowRight, Loader2, Lock, Mail, UserX } from "lucide-react";
+import { ArrowRight, Loader2, Lock, Mail, User, UserX } from "lucide-react";
 import { Suspense, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 
@@ -89,6 +89,24 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
             <CardContent className="space-y-4">
               <input name="flow" value={flow} type="hidden" />
               
+              {flow === "signUp" && (
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="name"
+                      name="name"
+                      placeholder="John Doe"
+                      type="text"
+                      className="pl-9"
+                      disabled={isLoading}
+                      required
+                    />
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
