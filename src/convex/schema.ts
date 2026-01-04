@@ -142,7 +142,8 @@ const schema = defineSchema(
       notes: v.optional(v.string()),
     })
       .index("by_worker", ["workerId"])
-      .index("by_status", ["status"]),
+      .index("by_status", ["status"])
+      .index("by_worker_date", ["workerId", "paymentDate"]),
 
     // Expenses
     expenses: defineTable({

@@ -13,7 +13,7 @@ import {
   Calendar,
 } from "lucide-react";
 import { startOfMonth, endOfMonth, format, startOfWeek, endOfWeek, startOfYear, endOfYear } from "date-fns";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -44,9 +44,9 @@ export default function Dashboard() {
   const { user, isLoading: authLoading } = useAuth();
   const [filterType, setFilterType] = useState<"week" | "month" | "year" | "all">("month");
 
-  const getDateRange = (type: string) => {
+  const dateRange = useMemo(() => {
     const now = new Date();
-    switch (type) {
+    switch (filterType) {
       case "week":
         return { start: startOfWeek(now).getTime(), end: endOfWeek(now).getTime() };
       case "month":
@@ -54,13 +54,11 @@ export default function Dashboard() {
       case "year":
         return { start: startOfYear(now).getTime(), end: endOfYear(now).getTime() };
       case "all":
-        return { start: 0, end: Date.now() };
+        return { start: 0, end: now.getTime() };
       default:
         return { start: startOfMonth(now).getTime(), end: endOfMonth(now).getTime() };
     }
-  };
-
-  const dateRange = getDateRange(filterType);
+  }, [filterType]);
 
   const initializeUser = useMutation(api.users.initializeUser);
 

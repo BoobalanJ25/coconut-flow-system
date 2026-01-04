@@ -100,18 +100,22 @@ export const getWorkerSalaryPayments = query({
       throw new Error("Unauthorized");
     }
 
-    const paymentsQuery = ctx.db
-      .query("salaryPayments")
-      .withIndex("by_worker", (q) => q.eq("workerId", args.workerId))
-      .order("desc");
-
     if (args.startDate !== undefined && args.endDate !== undefined) {
-      const allPayments = await paymentsQuery.collect();
-      return allPayments.filter(
-        (p) => p.paymentDate >= args.startDate! && p.paymentDate <= args.endDate!
-      );
+      return await ctx.db
+        .query("salaryPayments")
+        .withIndex("by_worker_date", (q) => 
+          q.eq("workerId", args.workerId)
+           .gte("paymentDate", args.startDate!)
+           .lte("paymentDate", args.endDate!)
+        )
+        .order("desc")
+        .collect();
     }
 
-    return await paymentsQuery.take(50);
+    return await ctx.db
+      .query("salaryPayments")
+      .withIndex("by_worker_date", (q) => q.eq("workerId", args.workerId))
+      .order("desc")
+      .take(50);
   },
 });
