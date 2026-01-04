@@ -26,6 +26,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 
 export default function Dashboard() {
   const { user, isLoading: authLoading } = useAuth();
@@ -70,6 +76,20 @@ export default function Dashboard() {
       : "skip"
   );
 
+  const attendanceHistory = useQuery(
+    api.attendance.getWorkerAttendanceHistory,
+    user && user.role !== "admin"
+      ? { workerId: user._id as Id<"users"> }
+      : "skip"
+  );
+
+  const salaryHistory = useQuery(
+    api.payments.getWorkerSalaryPayments,
+    user && user.role !== "admin"
+      ? { workerId: user._id as Id<"users"> }
+      : "skip"
+  );
+
   if (authLoading) {
     return <DashboardSkeleton />;
   }
@@ -86,7 +106,7 @@ export default function Dashboard() {
   }
 
   if (user.role !== "admin") {
-    if (workerStats === undefined || recentHarvests === undefined) {
+    if (workerStats === undefined || recentHarvests === undefined || attendanceHistory === undefined || salaryHistory === undefined) {
       return <DashboardSkeleton />;
     }
 
@@ -159,46 +179,159 @@ export default function Dashboard() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-1">
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Harvests</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Tree Location</TableHead>
-                    <TableHead className="text-right">Coconuts</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {recentHarvests?.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={3} className="text-center h-24">
-                        No recent harvests found.
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    recentHarvests?.map((harvest) => (
-                      <TableRow key={harvest._id}>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-muted-foreground" />
-                            {format(new Date(harvest.dateCut), "MMM d, yyyy")}
-                          </div>
-                        </TableCell>
-                        <TableCell>{harvest.tree?.location || "Unknown"}</TableCell>
-                        <TableCell className="text-right font-medium">
-                          {harvest.totalCoconuts}
-                        </TableCell>
+          <Tabs defaultValue="harvests" className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="harvests">Recent Harvests</TabsTrigger>
+              <TabsTrigger value="attendance">Attendance</TabsTrigger>
+              <TabsTrigger value="payments">Salary Payments</TabsTrigger>
+            </TabsList>
+            <TabsContent value="harvests">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Harvests</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Tree Location</TableHead>
+                        <TableHead className="text-right">Coconuts</TableHead>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                    </TableHeader>
+                    <TableBody>
+                      {recentHarvests?.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={3} className="text-center h-24">
+                            No recent harvests found.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        recentHarvests?.map((harvest) => (
+                          <TableRow key={harvest._id}>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Calendar className="h-4 w-4 text-muted-foreground" />
+                                {format(new Date(harvest.dateCut), "MMM d, yyyy")}
+                              </div>
+                            </TableCell>
+                            <TableCell>{harvest.tree?.location || "Unknown"}</TableCell>
+                            <TableCell className="text-right font-medium">
+                              {harvest.totalCoconuts}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            <TabsContent value="attendance">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Attendance History</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Work Type</TableHead>
+                        <TableHead className="text-right">Earned</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {attendanceHistory?.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center h-24">
+                            No attendance records found.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        attendanceHistory?.map((record) => (
+                          <TableRow key={record._id}>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Calendar className="h-4 w-4 text-muted-foreground" />
+                                {format(new Date(record.date), "MMM d, yyyy")}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <span className={`capitalize ${
+                                record.status === "present" ? "text-green-600" :
+                                record.status === "absent" ? "text-red-600" :
+                                "text-yellow-600"
+                              }`}>
+                                {record.status.replace("_", " ")}
+                              </span>
+                            </TableCell>
+                            <TableCell className="capitalize">{record.workType || "-"}</TableCell>
+                            <TableCell className="text-right font-medium">
+                              {record.amountEarned ? `₹${record.amountEarned}` : "-"}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            <TabsContent value="payments">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Salary Payments</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Period</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Amount</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {salaryHistory?.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center h-24">
+                            No payments found.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        salaryHistory?.map((payment) => (
+                          <TableRow key={payment._id}>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Calendar className="h-4 w-4 text-muted-foreground" />
+                                {format(new Date(payment.paymentDate), "MMM d, yyyy")}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {format(new Date(payment.periodStart), "MMM d")} - {format(new Date(payment.periodEnd), "MMM d")}
+                            </TableCell>
+                            <TableCell>
+                              <span className={`capitalize ${
+                                payment.status === "paid" ? "text-green-600" : "text-yellow-600"
+                              }`}>
+                                {payment.status}
+                              </span>
+                            </TableCell>
+                            <TableCell className="text-right font-medium">
+                              ₹{payment.amount.toLocaleString()}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     );
