@@ -1,1 +1,67 @@
-const links = isAdmin ? adminLinks : workerLinks;
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  DollarSign,
+  Package,
+  Trees,
+  Users,
+  Wheat,
+  Loader2,
+  Calendar,
+} from "lucide-react";
+import { startOfMonth, endOfMonth, format } from "date-fns";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Id } from "@/convex/_generated/dataModel";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+const { user, isLoading: authLoading } = useAuth();
+// ...
+if (user && !user.role) { ... }
+
+if (user.role !== "admin") {
+  if (workerStats === undefined || recentHarvests === undefined) {
+    return <DashboardSkeleton />;
+  }
+
+  return (
+    <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
+      <h2 className="text-2xl font-bold">Worker Dashboard</h2>
+      <p className="text-muted-foreground">
+        Welcome back, {user.name}. Please use the sidebar to navigate to your tasks.
+      </p>
+    </div>
+  );
+}
+
+if (stats === null) {
+  return (
+    <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
+      <p className="text-destructive">Error loading stats. Please try refreshing.</p>
+    </div>
+  );
+}
+
+return {
+  totalCoconuts,
+  treesWorked,
+  totalEarned,
+  pendingPayments,
+  harvestCount: filteredHarvests.length,
+};
+
+<div className="text-2xl font-bold">
+  {workerStats?.totalCoconuts.toLocaleString()}
+</div>

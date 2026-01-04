@@ -1,3 +1,1 @@
-{
-  "plan": "1. Verify the fixes for Dashboard and TreeOwners pages.\n2. Implement the Worker Dashboard features fully if any are missing (currently seems complete with stats and lists).\n3. Check for any other missing pages or features from the project specification (e.g. Settings, Stock, Sales pages need implementation details).\n4. Proceed to implement the remaining pages starting with Trees or Stock."
-}
+{"file_paths":["src/hooks/use-auth.ts"],"replace_files_in_context":false}
