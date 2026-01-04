@@ -1,5 +1,5 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { query, QueryCtx } from "./_generated/server";
+import { mutation, query, QueryCtx } from "./_generated/server";
 
 /**
  * Get the current signed in user. Returns null if the user is not signed in.
@@ -31,3 +31,24 @@ export const getCurrentUser = async (ctx: QueryCtx) => {
   }
   return await ctx.db.get(userId);
 };
+
+export const initializeUser = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const user = await getCurrentUser(ctx);
+    if (!user) return null;
+
+    if (!user.role) {
+      // Check if any admin exists
+      const anyAdmin = await ctx.db.query("users")
+        .filter(q => q.eq(q.field("role"), "admin"))
+        .first();
+
+      const role = anyAdmin ? "worker" : "admin";
+
+      await ctx.db.patch(user._id, { role });
+      return role;
+    }
+    return user.role;
+  },
+});

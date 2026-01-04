@@ -1,4 +1,4 @@
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -9,25 +9,53 @@ import {
   Trees,
   Users,
   Wheat,
+  Loader2,
 } from "lucide-react";
 import { startOfMonth, endOfMonth } from "date-fns";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const [dateRange] = useState({
     start: startOfMonth(new Date()).getTime(),
     end: endOfMonth(new Date()).getTime(),
   });
 
-  const stats = useQuery(api.dashboard.getAdminStats, {
-    startDate: dateRange.start,
-    endDate: dateRange.end,
-  });
+  const initializeUser = useMutation(api.users.initializeUser);
+
+  useEffect(() => {
+    if (user && !user.role) {
+      initializeUser();
+    }
+  }, [user, initializeUser]);
+
+  const stats = useQuery(
+    api.dashboard.getAdminStats,
+    user?.role === "admin"
+      ? {
+          startDate: dateRange.start,
+          endDate: dateRange.end,
+        }
+      : "skip"
+  );
+
+  if (authLoading) {
+    return <DashboardSkeleton />;
+  }
 
   if (!user) return null;
+
+  if (!user.role) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-muted-foreground">Setting up your account...</p>
+      </div>
+    );
+  }
 
   if (user.role !== "admin") {
     return (
