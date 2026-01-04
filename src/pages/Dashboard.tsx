@@ -12,7 +12,7 @@ import {
   Loader2,
   Calendar,
 } from "lucide-react";
-import { startOfMonth, endOfMonth, format } from "date-fns";
+import { startOfMonth, endOfMonth, format, startOfWeek, endOfWeek, startOfYear, endOfYear } from "date-fns";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -32,13 +32,35 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function Dashboard() {
   const { user, isLoading: authLoading } = useAuth();
-  const [dateRange] = useState({
-    start: startOfMonth(new Date()).getTime(),
-    end: endOfMonth(new Date()).getTime(),
-  });
+  const [filterType, setFilterType] = useState<"week" | "month" | "year" | "all">("month");
+
+  const getDateRange = (type: string) => {
+    const now = new Date();
+    switch (type) {
+      case "week":
+        return { start: startOfWeek(now).getTime(), end: endOfWeek(now).getTime() };
+      case "month":
+        return { start: startOfMonth(now).getTime(), end: endOfMonth(now).getTime() };
+      case "year":
+        return { start: startOfYear(now).getTime(), end: endOfYear(now).getTime() };
+      case "all":
+        return { start: 0, end: Date.now() };
+      default:
+        return { start: startOfMonth(now).getTime(), end: endOfMonth(now).getTime() };
+    }
+  };
+
+  const dateRange = getDateRange(filterType);
 
   const initializeUser = useMutation(api.users.initializeUser);
 
@@ -79,14 +101,22 @@ export default function Dashboard() {
   const attendanceHistory = useQuery(
     api.attendance.getWorkerAttendanceHistory,
     user && user.role !== "admin"
-      ? { workerId: user._id as Id<"users"> }
+      ? { 
+          workerId: user._id as Id<"users">,
+          startDate: filterType === "all" ? undefined : dateRange.start,
+          endDate: filterType === "all" ? undefined : dateRange.end
+        }
       : "skip"
   );
 
   const salaryHistory = useQuery(
     api.payments.getWorkerSalaryPayments,
     user && user.role !== "admin"
-      ? { workerId: user._id as Id<"users"> }
+      ? { 
+          workerId: user._id as Id<"users">,
+          startDate: filterType === "all" ? undefined : dateRange.start,
+          endDate: filterType === "all" ? undefined : dateRange.end
+        }
       : "skip"
   );
 
@@ -116,8 +146,21 @@ export default function Dashboard() {
           <div>
             <h2 className="text-3xl font-bold tracking-tight">Worker Dashboard</h2>
             <p className="text-muted-foreground">
-              Welcome back, {user.name}. Here's your activity for this month.
+              Welcome back, {user.name}. Here's your activity.
             </p>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Select value={filterType} onValueChange={(v: any) => setFilterType(v)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select period" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="week">This Week</SelectItem>
+                <SelectItem value="month">This Month</SelectItem>
+                <SelectItem value="year">This Year</SelectItem>
+                <SelectItem value="all">All Time</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -132,7 +175,7 @@ export default function Dashboard() {
                 {workerStats?.totalCoconuts.toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">
-                Coconuts this month
+                Coconuts {filterType === "all" ? "all time" : `this ${filterType}`}
               </p>
             </CardContent>
           </Card>
@@ -158,7 +201,7 @@ export default function Dashboard() {
                 ₹{workerStats?.totalEarned.toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">
-                Paid this month
+                Paid {filterType === "all" ? "all time" : `this ${filterType}`}
               </p>
             </CardContent>
           </Card>
@@ -230,7 +273,7 @@ export default function Dashboard() {
             <TabsContent value="attendance">
               <Card>
                 <CardHeader>
-                  <CardTitle>Attendance History</CardTitle>
+                  <CardTitle>Attendance History ({filterType === "all" ? "All Time" : `This ${filterType.charAt(0).toUpperCase() + filterType.slice(1)}`})</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <Table>
@@ -246,7 +289,7 @@ export default function Dashboard() {
                       {attendanceHistory?.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={4} className="text-center h-24">
-                            No attendance records found.
+                            No attendance records found for this period.
                           </TableCell>
                         </TableRow>
                       ) : (
@@ -282,7 +325,7 @@ export default function Dashboard() {
             <TabsContent value="payments">
               <Card>
                 <CardHeader>
-                  <CardTitle>Salary Payments</CardTitle>
+                  <CardTitle>Salary Payments ({filterType === "all" ? "All Time" : `This ${filterType.charAt(0).toUpperCase() + filterType.slice(1)}`})</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <Table>
@@ -298,7 +341,7 @@ export default function Dashboard() {
                       {salaryHistory?.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={4} className="text-center h-24">
-                            No payments found.
+                            No payments found for this period.
                           </TableCell>
                         </TableRow>
                       ) : (

@@ -81,7 +81,11 @@ export const getAttendanceByDate = query({
 });
 
 export const getWorkerAttendanceHistory = query({
-  args: { workerId: v.id("users") },
+  args: { 
+    workerId: v.id("users"),
+    startDate: v.optional(v.number()),
+    endDate: v.optional(v.number()),
+  },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
     if (!user) {
@@ -91,6 +95,18 @@ export const getWorkerAttendanceHistory = query({
     // If worker, can only view own attendance
     if (user.role === "worker" && user._id !== args.workerId) {
       throw new Error("Unauthorized");
+    }
+
+    if (args.startDate !== undefined && args.endDate !== undefined) {
+      return await ctx.db
+        .query("attendance")
+        .withIndex("by_worker_date", (q) => 
+          q.eq("workerId", args.workerId)
+           .gte("date", args.startDate!)
+           .lte("date", args.endDate!)
+        )
+        .order("desc")
+        .collect();
     }
 
     return await ctx.db

@@ -84,17 +84,29 @@ export const listSalaryPayments = query({
 });
 
 export const getWorkerSalaryPayments = query({
-  args: { workerId: v.id("users") },
+  args: { 
+    workerId: v.id("users"),
+    startDate: v.optional(v.number()),
+    endDate: v.optional(v.number()),
+  },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
     if (!user) {
       throw new Error("Unauthorized");
     }
 
-    return await ctx.db
+    const paymentsQuery = ctx.db
       .query("salaryPayments")
       .withIndex("by_worker", (q) => q.eq("workerId", args.workerId))
-      .order("desc")
-      .take(50);
+      .order("desc");
+
+    if (args.startDate !== undefined && args.endDate !== undefined) {
+      const allPayments = await paymentsQuery.collect();
+      return allPayments.filter(
+        (p) => p.paymentDate >= args.startDate! && p.paymentDate <= args.endDate!
+      );
+    }
+
+    return await paymentsQuery.take(50);
   },
 });
