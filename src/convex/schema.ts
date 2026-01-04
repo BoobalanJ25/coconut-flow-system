@@ -2,42 +2,165 @@ import { authTables } from "@convex-dev/auth/server";
 import { defineSchema, defineTable } from "convex/server";
 import { Infer, v } from "convex/values";
 
-// default user roles. can add / remove based on the project as needed
+// User roles
 export const ROLES = {
   ADMIN: "admin",
-  USER: "user",
-  MEMBER: "member",
+  WORKER: "worker",
 } as const;
 
 export const roleValidator = v.union(
   v.literal(ROLES.ADMIN),
-  v.literal(ROLES.USER),
-  v.literal(ROLES.MEMBER),
+  v.literal(ROLES.WORKER),
 );
 export type Role = Infer<typeof roleValidator>;
 
 const schema = defineSchema(
   {
-    // default auth tables using convex auth.
-    ...authTables, // do not remove or modify
+    ...authTables,
 
-    // the users table is the default users table that is brought in by the authTables
     users: defineTable({
-      name: v.optional(v.string()), // name of the user. do not remove
-      image: v.optional(v.string()), // image of the user. do not remove
-      email: v.optional(v.string()), // email of the user. do not remove
-      emailVerificationTime: v.optional(v.number()), // email verification time. do not remove
-      isAnonymous: v.optional(v.boolean()), // is the user anonymous. do not remove
+      name: v.optional(v.string()),
+      image: v.optional(v.string()),
+      email: v.optional(v.string()),
+      emailVerificationTime: v.optional(v.number()),
+      isAnonymous: v.optional(v.boolean()),
+      role: v.optional(roleValidator),
+      phone: v.optional(v.string()),
+    }).index("email", ["email"]),
 
-      role: v.optional(roleValidator), // role of the user. do not remove
-    }).index("email", ["email"]), // index for the email. do not remove or modify
+    // Tree Owners (Landlords)
+    treeOwners: defineTable({
+      name: v.string(),
+      phone: v.string(),
+      location: v.string(),
+      numberOfTrees: v.number(),
+      annualRent: v.number(),
+      notes: v.optional(v.string()),
+    }),
 
-    // add other tables here
+    // Coconut Trees
+    coconutTrees: defineTable({
+      treeId: v.string(),
+      ownerId: v.id("treeOwners"),
+      location: v.string(),
+      rentPerYear: v.number(),
+      expectedCoconutsCount: v.number(),
+      lastCutDate: v.optional(v.number()),
+      nextCutDate: v.optional(v.number()),
+      assignedWorkerId: v.optional(v.id("users")),
+      status: v.union(v.literal("active"), v.literal("inactive")),
+    })
+      .index("by_owner", ["ownerId"])
+      .index("by_worker", ["assignedWorkerId"])
+      .index("by_tree_id", ["treeId"]),
 
-    // tableName: defineTable({
-    //   ...
-    //   // table fields
-    // }).index("by_field", ["field"])
+    // Workers
+    workers: defineTable({
+      userId: v.id("users"),
+      salaryType: v.union(v.literal("daily"), v.literal("per_coconut")),
+      salaryAmount: v.number(),
+      location: v.string(),
+      status: v.union(v.literal("active"), v.literal("inactive")),
+    }).index("by_user", ["userId"]),
+
+    // Attendance & Work Records
+    attendance: defineTable({
+      workerId: v.id("users"),
+      date: v.number(),
+      treesWorked: v.number(),
+      coconutsHarvested: v.number(),
+      amountEarned: v.number(),
+      workType: v.union(v.literal("cutting"), v.literal("picking"), v.literal("both")),
+    }).index("by_worker", ["workerId"]),
+
+    // Harvest Records
+    harvests: defineTable({
+      treeId: v.id("coconutTrees"),
+      dateCut: v.number(),
+      totalCoconuts: v.number(),
+      cutterWorkerId: v.id("users"),
+      pickerWorkerId: v.optional(v.id("users")),
+      notes: v.optional(v.string()),
+    })
+      .index("by_tree", ["treeId"])
+      .index("by_cutter", ["cutterWorkerId"])
+      .index("by_date", ["dateCut"]),
+
+    // Stock Management
+    stock: defineTable({
+      freshCoconuts: v.number(),
+      oldStock: v.number(),
+      damagedCoconuts: v.number(),
+      lastUpdated: v.number(),
+    }),
+
+    // Stock History
+    stockHistory: defineTable({
+      date: v.number(),
+      type: v.union(v.literal("in"), v.literal("out"), v.literal("wastage")),
+      quantity: v.number(),
+      reason: v.string(),
+      referenceId: v.optional(v.string()),
+    }).index("by_date", ["date"]),
+
+    // Sales
+    sales: defineTable({
+      date: v.number(),
+      quantitySold: v.number(),
+      ratePerCoconut: v.number(),
+      totalRevenue: v.number(),
+      customerName: v.optional(v.string()),
+      customerPhone: v.optional(v.string()),
+      notes: v.optional(v.string()),
+    }).index("by_date", ["date"]),
+
+    // Rent Payments to Tree Owners
+    rentPayments: defineTable({
+      ownerId: v.id("treeOwners"),
+      amount: v.number(),
+      paymentDate: v.number(),
+      dueDate: v.number(),
+      status: v.union(v.literal("paid"), v.literal("pending"), v.literal("overdue")),
+      notes: v.optional(v.string()),
+    })
+      .index("by_owner", ["ownerId"])
+      .index("by_status", ["status"]),
+
+    // Salary Payments to Workers
+    salaryPayments: defineTable({
+      workerId: v.id("users"),
+      amount: v.number(),
+      paymentDate: v.number(),
+      periodStart: v.number(),
+      periodEnd: v.number(),
+      status: v.union(v.literal("paid"), v.literal("pending")),
+      notes: v.optional(v.string()),
+    })
+      .index("by_worker", ["workerId"])
+      .index("by_status", ["status"]),
+
+    // Expenses
+    expenses: defineTable({
+      date: v.number(),
+      category: v.union(
+        v.literal("transport"),
+        v.literal("storage"),
+        v.literal("maintenance"),
+        v.literal("other")
+      ),
+      amount: v.number(),
+      description: v.string(),
+      notes: v.optional(v.string()),
+    }).index("by_date", ["date"]),
+
+    // Business Settings
+    settings: defineTable({
+      businessName: v.string(),
+      location: v.string(),
+      phone: v.string(),
+      email: v.optional(v.string()),
+      defaultRentCycle: v.number(), // in days
+    }),
   },
   {
     schemaValidation: false,
