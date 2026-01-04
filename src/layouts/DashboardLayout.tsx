@@ -9,9 +9,9 @@ import {
   Settings,
   Trees,
   Users,
-  UserCheck,
   Wallet,
   Wheat,
+  User,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router";
@@ -39,8 +39,8 @@ function Sidebar({ className, isMobile, onClose }: SidebarProps) {
 
   const adminLinks = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Tree Owners", href: "/dashboard/owners", icon: UserCheck },
     { name: "Coconut Trees", href: "/dashboard/trees", icon: Trees },
+    { name: "Tree Owners", href: "/dashboard/owners", icon: User },
     { name: "Harvests", href: "/dashboard/harvests", icon: Wheat },
     { name: "Stock", href: "/dashboard/stock", icon: Package },
     { name: "Sales", href: "/dashboard/sales", icon: BarChart3 },
