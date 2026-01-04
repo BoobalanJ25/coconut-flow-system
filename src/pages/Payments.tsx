@@ -35,12 +35,20 @@ import {
 import { Plus, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Payments() {
-  const rentPayments = useQuery(api.payments.listRentPayments);
-  const salaryPayments = useQuery(api.payments.listSalaryPayments);
-  const owners = useQuery(api.treeOwners.list);
-  const workers = useQuery(api.workers.list);
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+
+  const rentPayments = useQuery(api.payments.listRentPayments, isAdmin ? {} : "skip");
+  const salaryPayments = useQuery(api.payments.listSalaryPayments, isAdmin ? {} : "skip");
+  const owners = useQuery(api.treeOwners.list, isAdmin ? {} : "skip");
+  const workers = useQuery(api.workers.list, isAdmin ? {} : "skip");
+  
+  const mySalaryPayments = useQuery(api.payments.getWorkerSalaryPayments, 
+    !isAdmin && user ? { workerId: user._id as any } : "skip"
+  );
   
   const createRentPayment = useMutation(api.payments.createRentPayment);
   const createSalaryPayment = useMutation(api.payments.createSalaryPayment);
@@ -103,6 +111,58 @@ export default function Payments() {
       toast.error("Failed to record salary payment");
     }
   };
+
+  if (!isAdmin) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight">My Payments</h2>
+          <p className="text-muted-foreground">
+            View your salary payment history.
+          </p>
+        </div>
+        
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Date</TableHead>
+                <TableHead>Period</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Amount</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {mySalaryPayments?.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center h-24">
+                    No payments found.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                mySalaryPayments?.map((payment) => (
+                  <TableRow key={payment._id}>
+                    <TableCell>{format(new Date(payment.paymentDate), "MMM d, yyyy")}</TableCell>
+                    <TableCell>
+                      {format(new Date(payment.periodStart), "MMM d")} - {format(new Date(payment.periodEnd), "MMM d")}
+                    </TableCell>
+                    <TableCell>
+                      <span className={`capitalize ${
+                        payment.status === "paid" ? "text-green-600" : "text-yellow-600"
+                      }`}>
+                        {payment.status}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">${payment.amount}</TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
