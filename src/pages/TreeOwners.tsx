@@ -110,7 +110,7 @@ export default function TreeOwners() {
 
   if (owners === undefined) {
     return (
-      <div className="flex h-[50vh] items-center justify-center">
+      <div className="flex items-center justify-center h-[50vh]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );

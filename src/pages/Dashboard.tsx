@@ -10,7 +10,6 @@ import {
   Users,
   Wheat,
   Loader2,
-  Calendar,
   Wallet,
 } from "lucide-react";
 import { startOfMonth, endOfMonth, format } from "date-fns";
@@ -18,7 +17,14 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Id } from "@/convex/_generated/dataModel";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export default function Dashboard() {
   const { user, isLoading: authLoading } = useAuth();
@@ -47,26 +53,26 @@ export default function Dashboard() {
 
   const workerStats = useQuery(
     api.dashboard.getWorkerStats,
-    user?.role === "worker" && user._id
+    user?.role !== "admin" && user?._id
       ? {
-          workerId: user._id as Id<"users">,
+          workerId: user._id as any,
           startDate: dateRange.start,
           endDate: dateRange.end,
         }
       : "skip"
   );
 
-  const workerHarvests = useQuery(
+  const recentHarvests = useQuery(
     api.harvests.getByWorker,
-    user?.role === "worker" && user._id
-      ? { workerId: user._id as Id<"users"> }
+    user?.role !== "admin" && user?._id
+      ? { workerId: user._id as any }
       : "skip"
   );
 
-  const workerPayments = useQuery(
+  const recentPayments = useQuery(
     api.payments.getWorkerSalaryPayments,
-    user?.role === "worker" && user._id
-      ? { workerId: user._id as Id<"users"> }
+    user?.role !== "admin" && user?._id
+      ? { workerId: user._id as any }
       : "skip"
   );
 
@@ -85,8 +91,8 @@ export default function Dashboard() {
     );
   }
 
-  if (user.role === "worker") {
-    if (workerStats === undefined || workerHarvests === undefined || workerPayments === undefined) {
+  if (user.role !== "admin") {
+    if (workerStats === undefined || recentHarvests === undefined || recentPayments === undefined) {
       return <DashboardSkeleton />;
     }
 
@@ -95,49 +101,19 @@ export default function Dashboard() {
         <div className="flex items-center justify-between space-y-2">
           <h2 className="text-3xl font-bold tracking-tight">My Dashboard</h2>
           <div className="text-sm text-muted-foreground">
-            {format(dateRange.start, "MMM d")} - {format(dateRange.end, "MMM d, yyyy")}
+             Welcome back, {user.name}
           </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Earned</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                ${workerStats?.totalEarned.toLocaleString()}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Paid this month
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Payments</CardTitle>
-              <Wallet className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-yellow-600">
-                ${workerStats?.pendingPayments.toLocaleString()}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                To be paid
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Coconuts Harvested</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Coconuts</CardTitle>
               <Package className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{workerStats?.totalCoconuts}</div>
-              <p className="text-xs text-muted-foreground">
-                Total coconuts cut
-              </p>
+              <div className="text-2xl font-bold">{workerStats.totalCoconuts.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">Harvested this month</p>
             </CardContent>
           </Card>
           <Card>
@@ -146,71 +122,98 @@ export default function Dashboard() {
               <Trees className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {workerStats?.treesWorked}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Trees harvested this month
-              </p>
+              <div className="text-2xl font-bold">{workerStats.treesWorked}</div>
+              <p className="text-xs text-muted-foreground">Trees harvested</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Earned</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">${workerStats.totalEarned.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">Paid this month</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pending Payments</CardTitle>
+              <Wallet className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-orange-600">${workerStats.pendingPayments.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">To be paid</p>
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-          <Card className="col-span-4">
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card>
             <CardHeader>
               <CardTitle>Recent Harvests</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {workerHarvests?.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No recent harvests.</p>
-                ) : (
-                  workerHarvests?.slice(0, 5).map((harvest) => (
-                    <div key={harvest._id} className="flex items-center justify-between border-b pb-2 last:border-0">
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium leading-none">
-                          {harvest.tree?.treeId ? `Tree #${harvest.tree.treeId}` : "Unknown Tree"}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {format(harvest.dateCut, "MMM d, yyyy")}
-                        </p>
-                      </div>
-                      <div className="font-medium">
-                        {harvest.totalCoconuts} coconuts
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Tree</TableHead>
+                    <TableHead className="text-right">Count</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {recentHarvests.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={3} className="text-center text-muted-foreground">No recent harvests</TableCell>
+                    </TableRow>
+                  ) : (
+                    recentHarvests.map((harvest) => (
+                      <TableRow key={harvest._id}>
+                        <TableCell>{format(new Date(harvest.dateCut), "MMM d")}</TableCell>
+                        <TableCell>Tree #{harvest.tree?.treeId}</TableCell>
+                        <TableCell className="text-right">{harvest.totalCoconuts}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
-          <Card className="col-span-3">
+
+          <Card>
             <CardHeader>
               <CardTitle>Recent Payments</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {workerPayments?.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No recent payments.</p>
-                ) : (
-                  workerPayments?.slice(0, 5).map((payment) => (
-                    <div key={payment._id} className="flex items-center justify-between border-b pb-2 last:border-0">
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium leading-none">
-                          Salary Payment
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {format(payment.paymentDate, "MMM d, yyyy")}
-                        </p>
-                      </div>
-                      <div className={`font-medium ${payment.status === "paid" ? "text-green-600" : "text-yellow-600"}`}>
-                        ${payment.amount}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {recentPayments.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={3} className="text-center text-muted-foreground">No recent payments</TableCell>
+                    </TableRow>
+                  ) : (
+                    recentPayments.map((payment) => (
+                      <TableRow key={payment._id}>
+                        <TableCell>{format(new Date(payment.paymentDate), "MMM d")}</TableCell>
+                        <TableCell>
+                          <span className={`capitalize ${payment.status === "paid" ? "text-green-600" : "text-yellow-600"}`}>
+                            {payment.status}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right">${payment.amount}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </div>
