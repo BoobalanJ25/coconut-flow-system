@@ -19,7 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Pencil, Trash2, Loader2, FileDown } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, FileDown, Search } from "lucide-react";
 import { toast } from "sonner";
 import { Id } from "@/convex/_generated/dataModel";
 import jsPDF from "jspdf";
@@ -32,6 +32,7 @@ export default function TreeOwners() {
   const removeOwner = useMutation(api.treeOwners.remove);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [editingId, setEditingId] = useState<Id<"treeOwners"> | null>(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -149,6 +150,12 @@ export default function TreeOwners() {
     }
   };
 
+  const filteredOwners = owners?.filter((owner) =>
+    owner.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    owner.phone.includes(searchQuery) ||
+    owner.location.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   if (owners === undefined) {
     return (
       <div className="flex items-center justify-center h-[50vh]">
@@ -159,20 +166,31 @@ export default function TreeOwners() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Tree Owners</h2>
           <p className="text-muted-foreground">
             Manage coconut tree owners and their details.
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleExportPDF}>
-            <FileDown className="mr-2 h-4 w-4" /> Export PDF
-          </Button>
-          <Button onClick={() => handleOpenDialog()}>
-            <Plus className="mr-2 h-4 w-4" /> Add Owner
-          </Button>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search owners..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8"
+            />
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={handleExportPDF}>
+              <FileDown className="mr-2 h-4 w-4" /> Export PDF
+            </Button>
+            <Button onClick={() => handleOpenDialog()}>
+              <Plus className="mr-2 h-4 w-4" /> Add Owner
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -273,14 +291,14 @@ export default function TreeOwners() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {owners?.length === 0 ? (
+            {filteredOwners?.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center h-24">
-                  No tree owners found.
+                  {searchQuery ? "No owners found matching your search." : "No tree owners found."}
                 </TableCell>
               </TableRow>
             ) : (
-              owners?.map((owner) => (
+              filteredOwners?.map((owner) => (
                 <TableRow key={owner._id}>
                   <TableCell className="font-medium">{owner.name}</TableCell>
                   <TableCell>{owner.phone}</TableCell>
