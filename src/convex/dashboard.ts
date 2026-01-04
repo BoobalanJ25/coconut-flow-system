@@ -9,8 +9,11 @@ export const getAdminStats = query({
   },
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
+    console.log("getAdminStats called for user:", user?._id, "Role:", user?.role);
+    
     if (!user || user.role !== "admin") {
-      throw new Error("Unauthorized");
+      console.log("Unauthorized access attempt to getAdminStats");
+      return null;
     }
 
     const sales = await ctx.db.query("sales").collect();
@@ -72,7 +75,7 @@ export const getWorkerStats = query({
   handler: async (ctx, args) => {
     const user = await getCurrentUser(ctx);
     if (!user) {
-      throw new Error("Unauthorized");
+      return null;
     }
 
     const harvests = await ctx.db

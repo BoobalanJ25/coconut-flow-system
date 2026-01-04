@@ -68,8 +68,19 @@ export default function Dashboard() {
     );
   }
 
-  if (!stats) {
+  if (stats === undefined) {
     return <DashboardSkeleton />;
+  }
+
+  if (stats === null) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
+        <p className="text-destructive">
+          Unable to load statistics. You may not have the required permissions.
+        </p>
+        <Button onClick={() => window.location.reload()}>Retry</Button>
+      </div>
+    );
   }
 
   return (
