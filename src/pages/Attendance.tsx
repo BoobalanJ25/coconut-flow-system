@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { format } from "date-fns";
-import { Calendar as CalendarIcon, Check, ChevronsUpDown, Save } from "lucide-react";
+import { Calendar as CalendarIcon, Save } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -29,13 +29,119 @@ import {
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Id } from "@/convex/_generated/dataModel";
+
+function AttendanceRow({ worker, dateTimestamp, existingRecord, markAttendance }: { worker: any, dateTimestamp: number, existingRecord: any, markAttendance: any }) {
+  const [status, setStatus] = useState<string>(existingRecord?.status || "absent");
+  const [workType, setWorkType] = useState<string>(existingRecord?.workType || "");
+  const [treesWorked, setTreesWorked] = useState<string>(existingRecord?.treesWorked?.toString() || "");
+  const [coconutsHarvested, setCoconutsHarvested] = useState<string>(existingRecord?.coconutsHarvested?.toString() || "");
+  const [amountEarned, setAmountEarned] = useState<string>(existingRecord?.amountEarned?.toString() || "");
+  
+  useEffect(() => {
+    setStatus(existingRecord?.status || "absent");
+    setWorkType(existingRecord?.workType || "");
+    setTreesWorked(existingRecord?.treesWorked?.toString() || "");
+    setCoconutsHarvested(existingRecord?.coconutsHarvested?.toString() || "");
+    setAmountEarned(existingRecord?.amountEarned?.toString() || "");
+  }, [existingRecord]);
+
+  const handleSave = async () => {
+    try {
+      await markAttendance({
+        workerId: worker.user._id,
+        date: dateTimestamp,
+        status: status as any,
+        workType: workType ? (workType as any) : undefined,
+        treesWorked: treesWorked ? Number(treesWorked) : undefined,
+        coconutsHarvested: coconutsHarvested ? Number(coconutsHarvested) : undefined,
+        amountEarned: amountEarned ? Number(amountEarned) : undefined,
+      });
+      toast.success("Saved");
+    } catch (error) {
+      toast.error("Failed to save");
+      console.error(error);
+    }
+  };
+
+  const isWorkDisabled = status === "absent" || status === "leave";
+
+  return (
+    <TableRow>
+      <TableCell className="font-medium">
+        <div className="flex flex-col">
+          <span>{worker.user?.name}</span>
+          <span className="text-xs text-muted-foreground">{worker.location}</span>
+        </div>
+      </TableCell>
+      <TableCell>
+        <Select value={status} onValueChange={setStatus}>
+          <SelectTrigger className="w-[130px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="present">Present</SelectItem>
+            <SelectItem value="half_day">Half Day</SelectItem>
+            <SelectItem value="leave">Leave</SelectItem>
+            <SelectItem value="absent">Absent</SelectItem>
+          </SelectContent>
+        </Select>
+      </TableCell>
+      <TableCell>
+        <Select value={workType} onValueChange={setWorkType} disabled={isWorkDisabled}>
+          <SelectTrigger className="w-[130px]">
+            <SelectValue placeholder="Type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="cutting">Cutting</SelectItem>
+            <SelectItem value="picking">Picking</SelectItem>
+            <SelectItem value="both">Both</SelectItem>
+            <SelectItem value="maintenance">Maintenance</SelectItem>
+            <SelectItem value="other">Other</SelectItem>
+          </SelectContent>
+        </Select>
+      </TableCell>
+      <TableCell>
+        <Input 
+          type="number" 
+          value={treesWorked} 
+          onChange={(e) => setTreesWorked(e.target.value)} 
+          className="w-20" 
+          disabled={isWorkDisabled}
+          placeholder="Trees"
+        />
+      </TableCell>
+      <TableCell>
+        <Input 
+          type="number" 
+          value={coconutsHarvested} 
+          onChange={(e) => setCoconutsHarvested(e.target.value)} 
+          className="w-20" 
+          disabled={isWorkDisabled}
+          placeholder="Nuts"
+        />
+      </TableCell>
+      <TableCell>
+        <Input 
+          type="number" 
+          value={amountEarned} 
+          onChange={(e) => setAmountEarned(e.target.value)} 
+          className="w-24" 
+          disabled={isWorkDisabled}
+          placeholder="₹"
+        />
+      </TableCell>
+      <TableCell>
+        <Button size="sm" onClick={handleSave} variant="ghost">
+          <Save className="h-4 w-4" />
+        </Button>
+      </TableCell>
+    </TableRow>
+  );
+}
 
 export default function Attendance() {
   const [date, setDate] = useState<Date>(new Date());
   
-  // Normalize date to midnight for consistent querying
   const normalizedDate = new Date(date);
   normalizedDate.setHours(0, 0, 0, 0);
   const dateTimestamp = normalizedDate.getTime();
@@ -43,38 +149,6 @@ export default function Attendance() {
   const workers = useQuery(api.workers.list);
   const attendanceRecords = useQuery(api.attendance.getAttendanceByDate, { date: dateTimestamp });
   const markAttendance = useMutation(api.attendance.markAttendance);
-
-  const [loading, setLoading] = useState<string | null>(null);
-
-  const handleStatusChange = async (workerId: Id<"users">, status: "present" | "absent" | "half_day" | "leave") => {
-    setLoading(workerId);
-    try {
-      // Find existing record to preserve other fields if needed, or just update status
-      const existingRecord = attendanceRecords?.find(r => r.workerId === workerId);
-      
-      await markAttendance({
-        workerId,
-        date: dateTimestamp,
-        status,
-        treesWorked: existingRecord?.treesWorked,
-        coconutsHarvested: existingRecord?.coconutsHarvested,
-        amountEarned: existingRecord?.amountEarned,
-        workType: existingRecord?.workType,
-        notes: existingRecord?.notes,
-      });
-      toast.success("Attendance updated");
-    } catch (error) {
-      toast.error("Failed to update attendance");
-      console.error(error);
-    } finally {
-      setLoading(null);
-    }
-  };
-
-  const handleDetailsChange = async (workerId: Id<"users">, field: string, value: any) => {
-    // This would be for a more detailed edit modal or inline edit
-    // For now, we'll focus on status, but the structure is here
-  };
 
   if (!workers) {
     return <div className="p-6">Loading workers...</div>;
@@ -124,59 +198,25 @@ export default function Attendance() {
                 <TableHead>Trees</TableHead>
                 <TableHead>Coconuts</TableHead>
                 <TableHead>Earned</TableHead>
+                <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {workers.map((worker) => {
                 const attendance = attendanceRecords?.find(r => r.workerId === worker.user?._id);
-                const status = attendance?.status || "absent"; // Default to absent if no record? Or maybe undefined/unmarked
-                
                 return (
-                  <TableRow key={worker._id}>
-                    <TableCell className="font-medium">
-                      <div className="flex flex-col">
-                        <span>{worker.user?.name}</span>
-                        <span className="text-xs text-muted-foreground">{worker.location}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Select
-                        value={attendance?.status}
-                        onValueChange={(val: any) => handleStatusChange(worker.user!._id, val)}
-                      >
-                        <SelectTrigger className="w-[140px]">
-                          <SelectValue placeholder="Mark Status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="present">Present</SelectItem>
-                          <SelectItem value="half_day">Half Day</SelectItem>
-                          <SelectItem value="leave">Leave</SelectItem>
-                          <SelectItem value="absent">Absent</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell>
-                      {attendance?.status === "present" || attendance?.status === "half_day" ? (
-                        <span className="capitalize">{attendance.workType || "-"}</span>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {attendance?.treesWorked || "-"}
-                    </TableCell>
-                    <TableCell>
-                      {attendance?.coconutsHarvested || "-"}
-                    </TableCell>
-                    <TableCell>
-                      {attendance?.amountEarned ? `₹${attendance.amountEarned}` : "-"}
-                    </TableCell>
-                  </TableRow>
+                  <AttendanceRow 
+                    key={worker._id} 
+                    worker={worker} 
+                    dateTimestamp={dateTimestamp} 
+                    existingRecord={attendance} 
+                    markAttendance={markAttendance} 
+                  />
                 );
               })}
               {workers.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     No workers found. Add workers first.
                   </TableCell>
                 </TableRow>
