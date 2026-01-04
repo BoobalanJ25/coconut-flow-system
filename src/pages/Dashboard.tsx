@@ -135,7 +135,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
-                ${workerStats?.totalEarned.toLocaleString()}
+                ₹{workerStats?.totalEarned.toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">
                 Paid this month
@@ -149,7 +149,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-yellow-600">
-                ${workerStats?.pendingPayments.toLocaleString()}
+                ₹{workerStats?.pendingPayments.toLocaleString()}
               </div>
               <p className="text-xs text-muted-foreground">
                 To be paid
@@ -230,7 +230,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${stats.totalRevenue.toLocaleString()}
+              ₹{stats.totalRevenue.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">
               For this month
@@ -248,7 +248,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold ${stats.profit < 0 ? "text-red-500" : "text-green-600"}`}>
-              ${stats.profit.toLocaleString()}
+              ₹{stats.profit.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">
               Revenue - Costs
@@ -292,24 +292,24 @@ export default function Dashboard() {
             <div className="space-y-4 p-4">
               <div className="flex items-center justify-between border-b pb-2">
                 <span className="text-sm font-medium">Revenue</span>
-                <span className="font-bold text-green-600">+${stats.totalRevenue.toLocaleString()}</span>
+                <span className="font-bold text-green-600">+₹{stats.totalRevenue.toLocaleString()}</span>
               </div>
               <div className="flex items-center justify-between border-b pb-2">
                 <span className="text-sm font-medium">Rent Paid</span>
-                <span className="font-bold text-red-600">-${stats.totalRentPaid.toLocaleString()}</span>
+                <span className="font-bold text-red-600">-₹{stats.totalRentPaid.toLocaleString()}</span>
               </div>
               <div className="flex items-center justify-between border-b pb-2">
                 <span className="text-sm font-medium">Salaries Paid</span>
-                <span className="font-bold text-red-600">-${stats.totalSalaryPaid.toLocaleString()}</span>
+                <span className="font-bold text-red-600">-₹{stats.totalSalaryPaid.toLocaleString()}</span>
               </div>
               <div className="flex items-center justify-between border-b pb-2">
                 <span className="text-sm font-medium">Expenses</span>
-                <span className="font-bold text-red-600">-${stats.totalExpenses.toLocaleString()}</span>
+                <span className="font-bold text-red-600">-₹{stats.totalExpenses.toLocaleString()}</span>
               </div>
               <div className="flex items-center justify-between pt-2">
                 <span className="text-base font-bold">Net Profit</span>
                 <span className={`text-base font-bold ${stats.profit < 0 ? "text-red-600" : "text-green-600"}`}>
-                  ${stats.profit.toLocaleString()}
+                  ₹{stats.profit.toLocaleString()}
                 </span>
               </div>
             </div>

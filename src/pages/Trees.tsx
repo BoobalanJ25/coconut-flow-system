@@ -249,7 +249,7 @@ export default function Trees() {
                     </span>
                   </TableCell>
                   <TableCell className="text-right">
-                    ${tree.rentPerYear.toLocaleString()}
+                    ₹{tree.rentPerYear.toLocaleString()}
                   </TableCell>
                 </TableRow>
               ))

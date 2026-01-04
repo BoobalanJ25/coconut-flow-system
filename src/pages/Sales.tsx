@@ -178,9 +178,9 @@ export default function Sales() {
                     {sale.customerName || <span className="text-muted-foreground">Walk-in</span>}
                   </TableCell>
                   <TableCell className="text-right">{sale.quantitySold}</TableCell>
-                  <TableCell className="text-right">${sale.ratePerCoconut}</TableCell>
+                  <TableCell className="text-right">₹{sale.ratePerCoconut}</TableCell>
                   <TableCell className="text-right font-bold">
-                    ${sale.totalRevenue.toLocaleString()}
+                    ₹{sale.totalRevenue.toLocaleString()}
                   </TableCell>
                 </TableRow>
               ))

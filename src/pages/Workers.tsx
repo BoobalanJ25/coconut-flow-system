@@ -202,7 +202,7 @@ export default function Workers() {
                     {worker.salaryType.replace("_", " ")}
                   </TableCell>
                   <TableCell className="text-right">
-                    ${worker.salaryAmount}
+                    ₹{worker.salaryAmount}
                   </TableCell>
                   <TableCell>
                     <span

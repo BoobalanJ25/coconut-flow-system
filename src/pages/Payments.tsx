@@ -153,7 +153,7 @@ export default function Payments() {
                         {payment.status}
                       </span>
                     </TableCell>
-                    <TableCell className="text-right">${payment.amount}</TableCell>
+                    <TableCell className="text-right">₹{payment.amount}</TableCell>
                   </TableRow>
                 ))
               )}
@@ -286,7 +286,7 @@ export default function Payments() {
                         {payment.status}
                       </span>
                     </TableCell>
-                    <TableCell className="text-right">${payment.amount}</TableCell>
+                    <TableCell className="text-right">₹{payment.amount}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -410,7 +410,7 @@ export default function Payments() {
                         {payment.status}
                       </span>
                     </TableCell>
-                    <TableCell className="text-right">${payment.amount}</TableCell>
+                    <TableCell className="text-right">₹{payment.amount}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
