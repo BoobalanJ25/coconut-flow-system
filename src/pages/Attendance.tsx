@@ -163,7 +163,7 @@ export default function Attendance() {
       case "year":
         return { start: startOfYear(now).getTime(), end: endOfYear(now).getTime() };
       case "all":
-        return { start: undefined, end: undefined };
+        return { start: 0, end: now.getTime() };
       default:
         return { start: startOfMonth(now).getTime(), end: endOfMonth(now).getTime() };
     }
@@ -292,14 +292,20 @@ export default function Attendance() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {historyRecords?.length === 0 ? (
+                  {historyRecords === undefined ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center h-24">
+                        Loading history...
+                      </TableCell>
+                    </TableRow>
+                  ) : historyRecords.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={7} className="text-center h-24">
                         No records found for this period.
                       </TableCell>
                     </TableRow>
                   ) : (
-                    historyRecords?.map((record) => (
+                    historyRecords.map((record) => (
                       <TableRow key={record._id}>
                         <TableCell>{format(new Date(record.date), "MMM d, yyyy")}</TableCell>
                         <TableCell>{record.workerName}</TableCell>
