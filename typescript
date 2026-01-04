@@ -1,60 +1,49 @@
-import {
-  BarChart3,
-  LayoutDashboard,
-  LogOut,
-  Menu,
-  Package,
-  Settings,
-  Trees,
-  Users,
-  Wallet,
-  Wheat,
-  User,
-  CalendarCheck,
-} from "lucide-react";
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import "./index.css";
+import { ConvexAuthProvider } from "@convex-dev/auth/react";
+import { ConvexReactClient } from "convex/react";
+import { BrowserRouter } from "react-router";
+import DashboardLayout from "./layouts/DashboardLayout";
+import { Route, Routes } from "react-router";
+import Landing from "./pages/Landing";
+import AuthPage from "./pages/Auth";
+import Dashboard from "./pages/Dashboard";
+import NotFound from "./pages/NotFound";
+import TreeOwners from "./pages/TreeOwners";
+import Trees from "./pages/Trees";
+import Workers from "./pages/Workers";
+import Attendance from "./pages/Attendance";
+import Harvests from "./pages/Harvests";
+import Stock from "./pages/Stock";
+import Sales from "./pages/Sales";
+import Payments from "./pages/Payments";
+import Settings from "./pages/Settings";
 
-// Workers
-workers: defineTable({
-  userId: v.id("users"),
-  salaryType: v.union(v.literal("daily"), v.literal("per_coconut")),
-  salaryAmount: v.number(),
-  location: v.string(),
-  status: v.union(v.literal("active"), v.literal("inactive")),
-}).index("by_user", ["userId"]),
+const convex = new ConvexReactClient(import.meta.env.VITE_CONVEX_URL as string);
 
-// Attendance & Work Records
-attendance: defineTable({
-  workerId: v.id("users"),
-  date: v.number(),
-  status: v.optional(v.union(v.literal("present"), v.literal("absent"), v.literal("half_day"), v.literal("leave"))),
-  treesWorked: v.optional(v.number()),
-  coconutsHarvested: v.optional(v.number()),
-  amountEarned: v.optional(v.number()),
-  workType: v.optional(v.union(v.literal("cutting"), v.literal("picking"), v.literal("both"), v.literal("maintenance"), v.literal("other"))),
-  notes: v.optional(v.string()),
-})
-  .index("by_worker", ["workerId"])
-  .index("by_date", ["date"])
-  .index("by_worker_date", ["workerId", "date"]),
-
-// Harvest Records
-
-export const markAttendance = mutation({
-  args: {
-    workerId: v.id("users"),
-    date: v.number(),
-    status: v.optional(v.union(v.literal("present"), v.literal("absent"), v.literal("half_day"), v.literal("leave"))),
-    treesWorked: v.optional(v.number()),
-    coconutsHarvested: v.optional(v.number()),
-    amountEarned: v.optional(v.number()),
-    workType: v.optional(v.union(v.literal("cutting"), v.literal("picking"), v.literal("both"), v.literal("maintenance"), v.literal("other"))),
-    notes: v.optional(v.string()),
-  },
-  // ...
-});
-
-export const navigation = [
-  { name: "Tree Owners", href: "/dashboard/owners", icon: User },
-  { name: "Attendance", href: "/dashboard/attendance", icon: CalendarCheck },
-  { name: "Harvests", href: "/dashboard/harvests", icon: Wheat },
-];
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <ConvexAuthProvider client={convex}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/dashboard" element={<DashboardLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="tree-owners" element={<TreeOwners />} />
+            <Route path="trees" element={<Trees />} />
+            <Route path="workers" element={<Workers />} />
+            <Route path="attendance" element={<Attendance />} />
+            <Route path="harvests" element={<Harvests />} />
+            <Route path="stock" element={<Stock />} />
+            <Route path="sales" element={<Sales />} />
+            <Route path="payments" element={<Payments />} />
+            <Route path="settings" element={<Settings />} />
+          </Route>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </ConvexAuthProvider>
+  </StrictMode>,
+);
