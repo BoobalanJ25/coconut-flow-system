@@ -394,6 +394,19 @@ export default function Dashboard() {
     <div className="space-y-8">
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+        <div className="flex items-center space-x-2">
+          <Select value={filterType} onValueChange={(v: any) => setFilterType(v)}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select period" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="week">This Week</SelectItem>
+              <SelectItem value="month">This Month</SelectItem>
+              <SelectItem value="year">This Year</SelectItem>
+              <SelectItem value="all">All Time</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -407,7 +420,7 @@ export default function Dashboard() {
               ₹{stats.totalRevenue.toLocaleString()}
             </div>
             <p className="text-xs text-muted-foreground">
-              For this month
+              {filterType === "all" ? "All time" : `For this ${filterType}`}
             </p>
           </CardContent>
         </Card>
@@ -460,7 +473,7 @@ export default function Dashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <Card className="col-span-4">
           <CardHeader>
-            <CardTitle>Financial Overview</CardTitle>
+            <CardTitle>Financial Overview ({filterType === "all" ? "All Time" : `This ${filterType.charAt(0).toUpperCase() + filterType.slice(1)}`})</CardTitle>
           </CardHeader>
           <CardContent className="pl-2">
             <div className="space-y-4 p-4">
@@ -520,7 +533,7 @@ export default function Dashboard() {
                 <div className="ml-4 space-y-1">
                   <p className="text-sm font-medium leading-none">Sales Count</p>
                   <p className="text-sm text-muted-foreground">
-                    Transactions this month
+                    Transactions {filterType === "all" ? "all time" : `this ${filterType}`}
                   </p>
                 </div>
                 <div className="ml-auto font-medium">{stats.salesCount}</div>
