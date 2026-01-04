@@ -19,9 +19,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, FileDown } from "lucide-react";
 import { toast } from "sonner";
 import { Id } from "@/convex/_generated/dataModel";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default function TreeOwners() {
   const owners = useQuery(api.treeOwners.list);
@@ -39,6 +41,45 @@ export default function TreeOwners() {
     annualRent: "",
     notes: "",
   });
+
+  const handleExportPDF = () => {
+    if (!owners || owners.length === 0) {
+      toast.error("No data to export");
+      return;
+    }
+
+    const doc = new jsPDF();
+
+    // Add title
+    doc.setFontSize(18);
+    doc.text("Tree Owners List", 14, 22);
+    doc.setFontSize(11);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30);
+
+    // Define columns
+    const tableColumn = ["Name", "Phone", "Location", "Trees", "Annual Rent", "Notes"];
+    
+    // Define rows
+    const tableRows = owners.map((owner) => [
+      owner.name,
+      owner.phone,
+      owner.location,
+      owner.numberOfTrees,
+      `$${owner.annualRent}`,
+      owner.notes || "-",
+    ]);
+
+    // Generate table
+    autoTable(doc, {
+      startY: 40,
+      head: [tableColumn],
+      body: tableRows,
+    });
+
+    // Save the PDF
+    doc.save("tree_owners_list.pdf");
+    toast.success("PDF exported successfully");
+  };
 
   const handleOpenDialog = (owner?: any) => {
     if (owner) {
@@ -125,9 +166,14 @@ export default function TreeOwners() {
             Manage coconut tree owners and their details.
           </p>
         </div>
-        <Button onClick={() => handleOpenDialog()}>
-          <Plus className="mr-2 h-4 w-4" /> Add Owner
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleExportPDF}>
+            <FileDown className="mr-2 h-4 w-4" /> Export PDF
+          </Button>
+          <Button onClick={() => handleOpenDialog()}>
+            <Plus className="mr-2 h-4 w-4" /> Add Owner
+          </Button>
+        </div>
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
