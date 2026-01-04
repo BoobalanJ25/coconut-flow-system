@@ -67,11 +67,16 @@ const schema = defineSchema(
     attendance: defineTable({
       workerId: v.id("users"),
       date: v.number(),
-      treesWorked: v.number(),
-      coconutsHarvested: v.number(),
-      amountEarned: v.number(),
-      workType: v.union(v.literal("cutting"), v.literal("picking"), v.literal("both")),
-    }).index("by_worker", ["workerId"]),
+      status: v.union(v.literal("present"), v.literal("absent"), v.literal("half_day"), v.literal("leave")),
+      treesWorked: v.optional(v.number()),
+      coconutsHarvested: v.optional(v.number()),
+      amountEarned: v.optional(v.number()),
+      workType: v.optional(v.union(v.literal("cutting"), v.literal("picking"), v.literal("both"), v.literal("maintenance"), v.literal("other"))),
+      notes: v.optional(v.string()),
+    })
+      .index("by_worker", ["workerId"])
+      .index("by_date", ["date"])
+      .index("by_worker_date", ["workerId", "date"]),
 
     // Harvest Records
     harvests: defineTable({

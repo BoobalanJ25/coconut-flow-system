@@ -25,6 +25,7 @@ const Payments = lazy(() => import("./pages/Payments.tsx"));
 const Workers = lazy(() => import("./pages/Workers.tsx"));
 const Settings = lazy(() => import("./pages/Settings.tsx"));
 const TreeOwners = lazy(() => import("./pages/TreeOwners.tsx"));
+const Attendance = lazy(() => import("./pages/Attendance.tsx"));
 
 // Simple loading fallback for route transitions
 function RouteLoading() {
@@ -79,6 +80,7 @@ createRoot(document.getElementById("root")!).render(
                 <Route index element={<Dashboard />} />
                 <Route path="trees" element={<Trees />} />
                 <Route path="owners" element={<TreeOwners />} />
+                <Route path="attendance" element={<Attendance />} />
                 <Route path="harvests" element={<Harvests />} />
                 <Route path="stock" element={<Stock />} />
                 <Route path="sales" element={<Sales />} />

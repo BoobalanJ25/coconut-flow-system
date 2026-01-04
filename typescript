@@ -1,67 +1,60 @@
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  ArrowDownRight,
-  ArrowUpRight,
-  DollarSign,
+  BarChart3,
+  LayoutDashboard,
+  LogOut,
+  Menu,
   Package,
+  Settings,
   Trees,
   Users,
+  Wallet,
   Wheat,
-  Loader2,
-  Calendar,
+  User,
+  CalendarCheck,
 } from "lucide-react";
-import { startOfMonth, endOfMonth, format } from "date-fns";
-import { useState, useEffect } from "react";
-import { useAuth } from "@/hooks/use-auth";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
-import { Id } from "@/convex/_generated/dataModel";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
-const { user, isLoading: authLoading } = useAuth();
-// ...
-if (user && !user.role) { ... }
+// Workers
+workers: defineTable({
+  userId: v.id("users"),
+  salaryType: v.union(v.literal("daily"), v.literal("per_coconut")),
+  salaryAmount: v.number(),
+  location: v.string(),
+  status: v.union(v.literal("active"), v.literal("inactive")),
+}).index("by_user", ["userId"]),
 
-if (user.role !== "admin") {
-  if (workerStats === undefined || recentHarvests === undefined) {
-    return <DashboardSkeleton />;
-  }
+// Attendance & Work Records
+attendance: defineTable({
+  workerId: v.id("users"),
+  date: v.number(),
+  status: v.optional(v.union(v.literal("present"), v.literal("absent"), v.literal("half_day"), v.literal("leave"))),
+  treesWorked: v.optional(v.number()),
+  coconutsHarvested: v.optional(v.number()),
+  amountEarned: v.optional(v.number()),
+  workType: v.optional(v.union(v.literal("cutting"), v.literal("picking"), v.literal("both"), v.literal("maintenance"), v.literal("other"))),
+  notes: v.optional(v.string()),
+})
+  .index("by_worker", ["workerId"])
+  .index("by_date", ["date"])
+  .index("by_worker_date", ["workerId", "date"]),
 
-  return (
-    <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
-      <h2 className="text-2xl font-bold">Worker Dashboard</h2>
-      <p className="text-muted-foreground">
-        Welcome back, {user.name}. Please use the sidebar to navigate to your tasks.
-      </p>
-    </div>
-  );
-}
+// Harvest Records
 
-if (stats === null) {
-  return (
-    <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
-      <p className="text-destructive">Error loading stats. Please try refreshing.</p>
-    </div>
-  );
-}
+export const markAttendance = mutation({
+  args: {
+    workerId: v.id("users"),
+    date: v.number(),
+    status: v.optional(v.union(v.literal("present"), v.literal("absent"), v.literal("half_day"), v.literal("leave"))),
+    treesWorked: v.optional(v.number()),
+    coconutsHarvested: v.optional(v.number()),
+    amountEarned: v.optional(v.number()),
+    workType: v.optional(v.union(v.literal("cutting"), v.literal("picking"), v.literal("both"), v.literal("maintenance"), v.literal("other"))),
+    notes: v.optional(v.string()),
+  },
+  // ...
+});
 
-return {
-  totalCoconuts,
-  treesWorked,
-  totalEarned,
-  pendingPayments,
-  harvestCount: filteredHarvests.length,
-};
-
-<div className="text-2xl font-bold">
-  {workerStats?.totalCoconuts.toLocaleString()}
-</div>
+export const navigation = [
+  { name: "Tree Owners", href: "/dashboard/owners", icon: User },
+  { name: "Attendance", href: "/dashboard/attendance", icon: CalendarCheck },
+  { name: "Harvests", href: "/dashboard/harvests", icon: Wheat },
+];

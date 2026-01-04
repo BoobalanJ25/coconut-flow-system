@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as attendance from "../attendance.js";
 import type * as auth from "../auth.js";
 import type * as auth_emailOtp from "../auth/emailOtp.js";
 import type * as coconutTrees from "../coconutTrees.js";
@@ -29,6 +30,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  attendance: typeof attendance;
   auth: typeof auth;
   "auth/emailOtp": typeof auth_emailOtp;
   coconutTrees: typeof coconutTrees;
