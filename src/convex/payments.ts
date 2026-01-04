@@ -96,6 +96,10 @@ export const getWorkerSalaryPayments = query({
       throw new Error("Unauthorized");
     }
 
+    if (user.role !== "admin" && user._id !== args.workerId) {
+      throw new Error("Unauthorized");
+    }
+
     const paymentsQuery = ctx.db
       .query("salaryPayments")
       .withIndex("by_worker", (q) => q.eq("workerId", args.workerId))

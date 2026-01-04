@@ -36,6 +36,7 @@ import { Plus, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { useAuth } from "@/hooks/use-auth";
+import { Id } from "@/convex/_generated/dataModel";
 
 export default function Payments() {
   const { user } = useAuth();
@@ -47,7 +48,7 @@ export default function Payments() {
   const workers = useQuery(api.workers.list, isAdmin ? {} : "skip");
   
   const mySalaryPayments = useQuery(api.payments.getWorkerSalaryPayments, 
-    !isAdmin && user ? { workerId: user._id as any } : "skip"
+    !isAdmin && user ? { workerId: user._id as Id<"users"> } : "skip"
   );
   
   const createRentPayment = useMutation(api.payments.createRentPayment);

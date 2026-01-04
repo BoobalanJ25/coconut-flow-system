@@ -103,8 +103,8 @@ export default function Dashboard() {
     user && user.role !== "admin"
       ? { 
           workerId: user._id as Id<"users">,
-          startDate: filterType === "all" ? undefined : dateRange.start,
-          endDate: filterType === "all" ? undefined : dateRange.end
+          startDate: dateRange.start,
+          endDate: dateRange.end
         }
       : "skip"
   );
@@ -114,8 +114,8 @@ export default function Dashboard() {
     user && user.role !== "admin"
       ? { 
           workerId: user._id as Id<"users">,
-          startDate: filterType === "all" ? undefined : dateRange.start,
-          endDate: filterType === "all" ? undefined : dateRange.end
+          startDate: dateRange.start,
+          endDate: dateRange.end
         }
       : "skip"
   );
