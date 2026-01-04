@@ -16,6 +16,7 @@ import type * as harvests from "../harvests.js";
 import type * as http from "../http.js";
 import type * as payments from "../payments.js";
 import type * as sales from "../sales.js";
+import type * as settings from "../settings.js";
 import type * as stock from "../stock.js";
 import type * as treeOwners from "../treeOwners.js";
 import type * as users from "../users.js";
@@ -36,6 +37,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   payments: typeof payments;
   sales: typeof sales;
+  settings: typeof settings;
   stock: typeof stock;
   treeOwners: typeof treeOwners;
   users: typeof users;

@@ -16,6 +16,15 @@ const Dashboard = lazy(() => import("./pages/Dashboard.tsx"));
 const DashboardLayout = lazy(() => import("./layouts/DashboardLayout.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
+// New pages
+const Trees = lazy(() => import("./pages/Trees.tsx"));
+const Harvests = lazy(() => import("./pages/Harvests.tsx"));
+const Stock = lazy(() => import("./pages/Stock.tsx"));
+const Sales = lazy(() => import("./pages/Sales.tsx"));
+const Payments = lazy(() => import("./pages/Payments.tsx"));
+const Workers = lazy(() => import("./pages/Workers.tsx"));
+const Settings = lazy(() => import("./pages/Settings.tsx"));
+
 // Simple loading fallback for route transitions
 function RouteLoading() {
   return (
@@ -67,7 +76,13 @@ createRoot(document.getElementById("root")!).render(
               
               <Route path="/dashboard" element={<DashboardLayout />}>
                 <Route index element={<Dashboard />} />
-                {/* Add other dashboard routes here later */}
+                <Route path="trees" element={<Trees />} />
+                <Route path="harvests" element={<Harvests />} />
+                <Route path="stock" element={<Stock />} />
+                <Route path="sales" element={<Sales />} />
+                <Route path="payments" element={<Payments />} />
+                <Route path="workers" element={<Workers />} />
+                <Route path="settings" element={<Settings />} />
               </Route>
 
               <Route path="*" element={<NotFound />} />
