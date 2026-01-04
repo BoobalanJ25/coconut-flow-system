@@ -117,3 +117,48 @@ export const getWorkerAttendanceHistory = query({
       .take(100);
   },
 });
+
+export const getAllAttendanceHistory = query({
+  args: { 
+    startDate: v.optional(v.number()),
+    endDate: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const user = await getCurrentUser(ctx);
+    if (!user || user.role !== "admin") {
+      throw new Error("Unauthorized");
+    }
+
+    let attendanceRecords;
+
+    if (args.startDate !== undefined && args.endDate !== undefined) {
+      attendanceRecords = await ctx.db
+        .query("attendance")
+        .withIndex("by_date", (q) => 
+          q.gte("date", args.startDate!).lte("date", args.endDate!)
+        )
+        .order("desc")
+        .collect();
+    } else {
+      attendanceRecords = await ctx.db
+        .query("attendance")
+        .withIndex("by_date")
+        .order("desc")
+        .take(100);
+    }
+
+    // Enrich with worker details
+    const enrichedRecords = await Promise.all(
+      attendanceRecords.map(async (record) => {
+        const workerUser = await ctx.db.get(record.workerId);
+        return {
+          ...record,
+          workerName: workerUser?.name || "Unknown",
+          workerEmail: workerUser?.email,
+        };
+      })
+    );
+
+    return enrichedRecords;
+  },
+});
